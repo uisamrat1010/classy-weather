@@ -47,6 +47,8 @@ class App extends React.Component {
 
   //async fetchWeather() {
   fetchWeather = async () => {
+    if (this.state.location.length < 2) return this.setState({ weather: {} });
+
     try {
       this.setState({ isLoading: true });
       // 1) Getting location (geocoding)
@@ -54,7 +56,7 @@ class App extends React.Component {
         `https://geocoding-api.open-meteo.com/v1/search?name=${this.state.location}`
       );
       const geoData = await geoRes.json();
-      console.log(geoData);
+      //  console.log(geoData);
 
       if (!geoData.results) throw new Error("Location not found");
 
@@ -71,21 +73,35 @@ class App extends React.Component {
       const weatherData = await weatherRes.json();
       this.setState({ weather: weatherData.daily });
     } catch (err) {
-      console.err(err);
+      console.error(err.message);
     } finally {
       this.setState({ isLoading: false });
-      this.setState({ location: "" });
+      //this.setState({ location: "" });
     }
   };
 
   setLocation = (e) => this.setState({ location: e.target.value });
+
+  //useEffect []
+  componentDidMount() {
+    //this.fetchWeather();
+    this.setState({ location: localStorage.getItem("location") || "" });
+  }
+
+  //useEffect [location]
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.location !== prevState.location) {
+      this.fetchWeather();
+    }
+
+    localStorage.setItem("location", this.state.location);
+  }
 
   render() {
     return (
       <div className="app">
         <h1>Classy Weather</h1>
         <Input location={this.state.location} setLocation={this.setLocation} />
-        <button onClick={this.fetchWeather}>Get Weather</button>
 
         {this.state.isLoading && <p className="loader">Loading...</p>}
 
@@ -102,6 +118,11 @@ class App extends React.Component {
 export default App;
 
 class Weather extends React.Component {
+  // useEffect return function
+  componentWillUnmount() {
+    console.log("componenet unmount");
+  }
+
   render() {
     //console.log(this.props);
     const {
